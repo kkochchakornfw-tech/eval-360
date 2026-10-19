@@ -1,0 +1,200 @@
+/* Isometric login scene: pure CSS 3D. All sizes in em so the font-size on .iso-wrap scales it. */
+
+.iso-wrap {
+  position: relative;
+  width: 36em;
+  height: 34em;
+  pointer-events: none;
+}
+
+.iso {
+  position: absolute;
+  left: 6em;
+  top: 9em;
+  width: 24em;
+  height: 24em;
+  transform-style: preserve-3d;
+  transform: rotateX(58deg) rotateZ(-45deg);
+}
+
+/* ---------- floor ---------- */
+.iso-slab {
+  position: absolute;
+  inset: 0;
+  border-radius: 1.2em;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  background:
+    linear-gradient(rgba(47, 91, 255, 0.07) 1px, transparent 1px) 0 0 / 3em 3em,
+    linear-gradient(90deg, rgba(47, 91, 255, 0.07) 1px, transparent 1px) 0 0 / 3em 3em,
+    linear-gradient(135deg, #ffffff, #dfe9ff);
+  box-shadow: 0 0 0 0.35em rgba(255, 255, 255, 0.55);
+}
+.iso-slab::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 1.2em;
+  background: #b9cbf5;
+  transform: translateZ(-0.9em);
+  box-shadow: 0 2.5em 3em -0.5em rgba(37, 70, 200, 0.35);
+}
+
+.iso-rail {
+  position: absolute;
+  border-radius: 1em;
+  background: linear-gradient(90deg, rgba(47, 91, 255, 0.1), rgba(47, 91, 255, 0.22), rgba(47, 91, 255, 0.1));
+  transform: translateZ(0.05em);
+}
+.iso-rail.x { left: 0; right: 0; top: calc(50% - 0.7em); height: 1.4em; }
+.iso-rail.y { top: 0; bottom: 0; left: calc(50% - 0.7em); width: 1.4em; }
+
+.iso-pad {
+  position: absolute;
+  width: 3em;
+  height: 3em;
+  border-radius: 0.7em;
+  background: linear-gradient(135deg, #fff, #cfdcff);
+  border: 1px solid #fff;
+  transform: translateZ(0.25em);
+  box-shadow: 0 0.3em 0.6em rgba(37, 70, 200, 0.2);
+}
+
+.iso-core-base {
+  position: absolute;
+  left: 7em;
+  top: 7em;
+  width: 10em;
+  height: 10em;
+  border-radius: 1.4em;
+  background: linear-gradient(135deg, #f6f9ff, #bcd0ff);
+  border: 1px solid #fff;
+  transform: translateZ(0.5em);
+  box-shadow: 0 0 2.4em rgba(47, 91, 255, 0.35);
+  animation: iso-glow 4s ease-in-out infinite;
+}
+
+.iso-shadow {
+  position: absolute;
+  left: 6em;
+  top: 6em;
+  width: 12em;
+  height: 12em;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(37, 70, 200, 0.32), transparent);
+  transform: translateZ(0.1em);
+  animation: iso-shadow 4s ease-in-out infinite;
+}
+
+/* ---------- glass plates ---------- */
+.iso-plate {
+  --z: 2em;
+  position: absolute;
+  left: 7.2em;
+  top: 7.2em;
+  width: 9.6em;
+  height: 9.6em;
+  border-radius: 1.2em;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(110, 150, 255, var(--a, 0.35)));
+  box-shadow: 0 0 1.6em rgba(47, 91, 255, 0.28), inset 0 0 1.2em rgba(255, 255, 255, 0.6);
+  transform: translateZ(var(--z));
+  animation: iso-bob 4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.42s);
+}
+.iso-plate.top {
+  background: linear-gradient(135deg, #5f86ff, #2347e0);
+  border-color: #cfdcff;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 700;
+}
+.iso-plate .iso-label {
+  font-size: 3em;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0.06em 0.3em rgba(10, 30, 120, 0.5);
+}
+
+/* ---------- cubes ---------- */
+.iso-cube {
+  --s: 1.9em;
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  transform-style: preserve-3d;
+}
+.iso-cube > i {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 0.15em;
+}
+.iso-cube .t { background: linear-gradient(135deg, #9db8ff, #6b90ff); transform: translateZ(var(--s)); }
+.iso-cube .y { background: #3f67f5; transform-origin: 50% 100%; transform: rotateX(-90deg); }
+.iso-cube .x { background: #2548d6; transform-origin: 0 50%; transform: rotateY(-90deg); }
+
+/* rail runners: start at the pad, slide in to the middle and fade */
+.iso-run { z-index: 2; }
+.iso-run.a { left: calc(50% - 0.95em); top: calc(50% - 0.95em); animation: run-a 5s ease-in-out infinite; }
+.iso-run.b { left: calc(50% - 0.95em); top: calc(50% - 0.95em); animation: run-b 5s ease-in-out infinite; animation-delay: -1.25s; }
+.iso-run.c { left: calc(50% - 0.95em); top: calc(50% - 0.95em); animation: run-c 5s ease-in-out infinite; animation-delay: -2.5s; }
+.iso-run.d { left: calc(50% - 0.95em); top: calc(50% - 0.95em); animation: run-d 5s ease-in-out infinite; animation-delay: -3.75s; }
+
+/* small cubes floating around the stack */
+.iso-float { --s: 1.1em; --z: 9em; transform: translateZ(var(--z)); animation: iso-drift 5.5s ease-in-out infinite; }
+.iso-float.f1 { left: 2.4em; top: 6em; animation-delay: -1s; --z: 8em; }
+.iso-float.f2 { left: 19em; top: 15em; animation-delay: -3s; --z: 11em; }
+.iso-float.f3 { left: 4em; top: 18em; animation-delay: -2s; --z: 5em; --s: 0.8em; }
+
+/* ---------- motion ---------- */
+@keyframes iso-bob {
+  0%, 100% { transform: translateZ(var(--z)); }
+  50% { transform: translateZ(calc(var(--z) + 1em)); }
+}
+@keyframes iso-glow {
+  0%, 100% { box-shadow: 0 0 1.6em rgba(47, 91, 255, 0.25); }
+  50% { box-shadow: 0 0 3em rgba(47, 91, 255, 0.55); }
+}
+@keyframes iso-shadow {
+  0%, 100% { transform: translateZ(0.1em) scale(1); opacity: 0.9; }
+  50% { transform: translateZ(0.1em) scale(1.1); opacity: 0.6; }
+}
+@keyframes iso-drift {
+  0%, 100% { transform: translateZ(var(--z)); }
+  50% { transform: translateZ(calc(var(--z) + 1.6em)); }
+}
+@keyframes run-a {
+  0% { transform: translate3d(-10.5em, 0, 0.3em); opacity: 0; }
+  12% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate3d(-3.2em, 0, 0.3em); opacity: 0; }
+}
+@keyframes run-b {
+  0% { transform: translate3d(0, -10.5em, 0.3em); opacity: 0; }
+  12% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate3d(0, -3.2em, 0.3em); opacity: 0; }
+}
+@keyframes run-c {
+  0% { transform: translate3d(10.5em, 0, 0.3em); opacity: 0; }
+  12% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate3d(3.2em, 0, 0.3em); opacity: 0; }
+}
+@keyframes run-d {
+  0% { transform: translate3d(0, 10.5em, 0.3em); opacity: 0; }
+  12% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate3d(0, 3.2em, 0.3em); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iso-wrap *, .iso-wrap *::after {
+    animation: none !important;
+  }
+  .iso-run { opacity: 1; }
+  .iso-run.a { transform: translate3d(-6em, 0, 0.3em); }
+  .iso-run.b { transform: translate3d(0, -6em, 0.3em); }
+  .iso-run.c { transform: translate3d(6em, 0, 0.3em); }
+  .iso-run.d { transform: translate3d(0, 6em, 0.3em); }
+}

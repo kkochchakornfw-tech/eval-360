@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบประเมิน 360 องศา - V10 (Advance Sorting)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #2563eb; --bg-color: #f3f4f6; --card-bg: #ffffff; --border: #d1d5db; }
+        body { font-family: 'Sarabun', Tahoma, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; background-color: #e5e7eb; transition: 0.3s; font-weight: bold; }
+        button.active { background-color: var(--primary); color: white; }
+        button.submit-btn { background-color: #10b981; color: white; width: 100%; padding: 15px; font-size: 18px; margin-top: 20px; }
+        button.add-btn { background-color: #3b82f6; color: white; padding: 8px 15px; font-size: 14px; white-space: nowrap; }
+        button.del-btn { background-color: #ef4444; color: white; padding: 5px 10px; font-size: 12px; }
+        button.edit-btn { background-color: #f59e0b; color: white; padding: 5px 10px; font-size: 12px; margin-right: 5px; }
+        .card { background-color: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none; margin-bottom: 20px; }
+        .card.active { display: block; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        select, input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 5px; font-size: 16px; box-sizing: border-box;}
+        optgroup { font-weight: bold; color: var(--primary); }
+        .question-group { margin-top: 20px; border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
+        .question-header { background-color: #f8fafc; padding: 10px; font-weight: bold; border-bottom: 1px solid var(--border); }
+        .question-header.job-based { background-color: #fef08a; color: #854d0e; }
+        .question-header.kpi-based { background-color: #fbcfe8; color: #831843; }
+        .question-item { padding: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .rating-options { display: flex; gap: 10px; }
+        .rating-options label { font-weight: normal; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        
+        .table-responsive { overflow-x: auto; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; white-space: nowrap; margin-bottom: 20px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+        th.row-header, td.row-header { text-align: left; min-width: 250px; white-space: normal; }
+        .head-pharma { background-color: #ffff00; font-weight: bold; }
+        .head-staff { background-color: #fde047; font-weight: bold; }
+        .head-summary { background-color: #bfdbfe; font-weight: bold; }
+        .bg-gray { background-color: #e5e5e5; font-weight: bold; }
+        .setting-section { border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .flex-row { display: flex; gap: 15px; align-items: center; margin-top: 10px; }
+        .list-container { max-height: 250px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; background: #f9fafb; margin-bottom: 5px; }
+        
+        .chart-container { width: 100%; max-width: 900px; margin: 20px auto; }
+        .ind-summary-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 8px; text-align: center; margin-top: 20px; }
+        .ind-score { font-size: 36px; font-weight: bold; color: #166534; }
+        .ind-table { width: 100%; margin-top: 15px; font-size: 16px; border-collapse: collapse; }
+        .ind-table td { border: none; border-bottom: 1px solid #eee; padding: 10px; text-align: left; }
+        .ind-table td.val { text-align: right; }
+        .ind-head { font-weight: bold; background-color: #f3f4f6; }
+        .alert-warning { background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; border: 1px solid #ffeeba; margin-top: 20px; font-weight: bold; }
+        
+        .section-title { padding: 10px; background: #1f2937; color: white; border-radius: 5px; margin-top: 40px; }
+        .sort-box { background: #e0f2fe; border: 1px solid #bae6fd; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .sort-select { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #0284c7; width: 100%; max-width: 400px; margin-top: 10px; font-weight: bold; color: #0369a1; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>ระบบประเมิน 360 องศา และ KPI</h1>
+    </div>
+
+    <div class="nav-tabs">
+        <button id="btn-form" class="active" onclick="switchTab('form')">1. ฟอร์มประเมิน</button>
+        <button id="btn-report" onclick="switchTab('report')">2. ภาพรวม & กราฟ</button>
+        <button id="btn-individual" onclick="switchTab('individual')">3. รายงานบุคคล</button>
+        <button id="btn-settings" onclick="switchTab('settings')">4. ตั้งค่าระบบ</button>
+        <button id="btn-data" onclick="switchTab('data')">5. จัดการข้อมูล (Edit)</button>
+    </div>
+
+    <!-- ----------------- SECTION 1: FORM ----------------- -->
+    <div id="sec-form" class="card active">
+        <div style="display: flex; gap: 20px; margin-bottom: 10px; flex-wrap: wrap;">
+            <div class="form-group" style="flex: 1; min-width: 300px;">
+                <label>ผู้ประเมิน (คุณคือใคร):</label>
+                <select id="evaluator" onchange="updateEvaluateeList()"></select>
+            </div>
+            <div class="form-group" style="flex: 1; min-width: 300px;">
+                <label>ผู้รับการประเมิน (คุณกำลังประเมินใคร):</label>
+                <select id="evaluatee" onchange="renderQuestions()" disabled>
+                    <option value="">-- กรุณาเลือกผู้ประเมินก่อน --</option>
+                </select>
+            </div>
+        </div>
+
+        <form id="evalForm">
+            <div id="questions-container"></div>
+            <button type="button" class="submit-btn" onclick="saveEvaluation()">บันทึกผลการประเมิน</button>
+        </form>
+    </div>
+
+    <!-- ----------------- SECTION 2: REPORT ----------------- -->
+    <div id="sec-report" class="card">
+        
+        <div class="sort-box">
+            <label style="margin:0; font-size: 18px; color: #0284c7;"><b>⚙️ ตั้งค่าการแสดงผล:</b> การเรียงลำดับพนักงานในตารางและกราฟ</label>
+            <br>
+            <select id="report-sort-order" class="sort-select" onchange="generateReport()">
+                <option value="total_desc">🏆 เรียงตาม "คะแนนรวมสุทธิ" (มาก ➔ น้อย)</option>
+                <option value="total_asc">🔻 เรียงตาม "คะแนนรวมสุทธิ" (น้อย ➔ มาก)</option>
+                <option value="core_desc">📘 เรียงตาม "คะแนน Core Competency" (มาก ➔ น้อย)</option>
+                <option value="job_desc">📙 เรียงตาม "คะแนน Job Based" (มาก ➔ น้อย)</option>
+                <option value="kpi_desc">📕 เรียงตาม "คะแนน KPI" (มาก ➔ น้อย)</option>
+                <option value="name_asc">👤 เรียงตาม "ชื่อพนักงาน" (ก ➔ ฮ)</option>
+            </select>
+        </div>
+
+        <h2 class="section-title">📊 กราฟสรุปผลการประเมินภาพรวม</h2>
+        <div class="chart-container"><canvas id="pharmaChart"></canvas></div>
+        <div class="chart-container"><canvas id="staffChart"></canvas></div>
+        
+        <h2 class="section-title">📋 1. ตารางคะแนนดิบ: Core Competency (30%)</h2>
+        <h3 id="report-core-title"></h3>
+        <h4>1.1 เภสัชกร</h4>
+        <div class="table-responsive" id="div-core-pharma"></div>
+        <h4>1.2 เจ้าหน้าที่ห้องยา</h4>
+        <div class="table-responsive" id="div-core-staff"></div>
+        
+        <h2 class="section-title">📋 2. ตารางคะแนนดิบ: Job Based (35%)</h2>
+        <h4>2.1 เภสัชกร</h4>
+        <div class="table-responsive" id="div-job-pharma"></div>
+        <h4>2.2 เจ้าหน้าที่ห้องยา</h4>
+        <div class="table-responsive" id="div-job-staff"></div>
+
+        <h2 class="section-title">📋 3. ตารางประเมิน: KPI (35%)</h2>
+        <h4>3.1 เภสัชกร</h4>
+        <div class="table-responsive" id="div-kpi-pharma"></div>
+        <h4>3.2 เจ้าหน้าที่ห้องยา</h4>
+        <div class="table-responsive" id="div-kpi-staff"></div>
+
+        <h2 class="section-title">🏆 4. สรุปผลคะแนนรวมสุทธิ (100%)</h2>
+        <h4>4.1 เภสัชกร</h4>
+        <div class="table-responsive" id="div-sum-pharma"></div>
+        <h4>4.2 เจ้าหน้าที่ห้องยา</h4>
+        <div class="table-responsive" id="div-sum-staff"></div>
+
+        <button class="del-btn" style="margin-top:20px; width: 100%; padding:15px; font-size:16px;" onclick="clearAllData()">ล้างข้อมูลการประเมินทั้งหมด (Reset All Data)</button>
+    </div>
+
+    <!-- ----------------- SECTION 3: INDIVIDUAL REPORT ----------------- -->
+    <div id="sec-individual" class="card">
+        <h2>รายงานแจ้งผลรายบุคคล (Feedback)</h2>
+        <div class="form-group">
+            <label>เลือกพนักงานเพื่อดูผลประเมิน:</label>
+            <select id="ind-select" onchange="renderIndividualReport()">
+                <option value="">-- เลือกพนักงาน --</option>
+            </select>
+        </div>
+        <div id="ind-content" style="display: none;">
+            <div class="ind-summary-box">
+                <div style="font-size: 20px;">คะแนนประเมินรวมสุทธิของ <span id="ind-name" style="font-weight:bold; color:var(--primary);"></span></div>
+                <div class="ind-score"><span id="ind-total">0</span> / 100%</div>
+            </div>
+            <h3 style="margin-top:30px; border-bottom:2px solid #ccc; padding-bottom:5px;">รายละเอียดคะแนนรายหมวด</h3>
+            <table class="ind-table" id="ind-detail-table"></table>
+        </div>
+    </div>
+
+    <!-- ----------------- SECTION 4: SETTINGS ----------------- -->
+    <div id="sec-settings" class="card">
+        <div class="setting-section">
+            <label style="font-size: 18px; color: var(--primary);">ส่วนที่ 1: ตั้งค่าระบบหลัก</label>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+            <label>ตั้งค่า: ผู้ทำหน้าที่หัวหน้าประเมิน</label>
+            <input type="text" id="set-head" value="ชลิตา ธารสิริโรจน์" onchange="saveSettings()">
+
+            <label style="margin-top: 15px;">ตั้งค่า: สัดส่วนคะแนน Core Competency (%)</label>
+            <div class="flex-row">
+                <span>น้ำหนักจากหัวหน้า:</span>
+                <input type="number" id="set-head-weight" min="0" max="100" style="width: 100px;" onchange="updateWeights()"> %
+                <span style="margin-left: 20px;">น้ำหนักจากเพื่อนร่วมงาน:</span>
+                <input type="number" id="set-peer-weight" disabled style="width: 100px; background-color: #eee;"> %
+            </div>
+        </div>
+
+        <div class="setting-section" style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px;">
+                <label style="font-size: 18px; color: var(--primary);">จัดการ: รายชื่อ "เภสัชกร"</label>
+                <div class="list-container" id="list-pharma"></div>
+                <div class="flex-row">
+                    <input type="text" id="new-pharma" placeholder="เพิ่มชื่อ-สกุล เภสัชกร">
+                    <button class="add-btn" onclick="addEmployee('pharma')">+ เพิ่ม</button>
+                </div>
+            </div>
+            <div style="flex: 1; min-width: 300px;">
+                <label style="font-size: 18px; color: var(--primary);">จัดการ: รายชื่อ "เจ้าหน้าที่ห้องยา"</label>
+                <div class="list-container" id="list-staff"></div>
+                <div class="flex-row">
+                    <input type="text" id="new-staff" placeholder="เพิ่มชื่อ-สกุล เจ้าหน้าที่ห้องยา">
+                    <button class="add-btn" onclick="addEmployee('staff')">+ เพิ่ม</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="setting-section">
+            <label style="font-size: 18px; color: #854d0e;">จัดการ: หัวข้อ Job Based สำหรับ "เภสัชกร" (รวม 35%)</label>
+            <table id="setting-job-pharma"></table>
+            <button class="add-btn" onclick="addSettingTopic('jobPharma')">+ เพิ่มหัวข้อ Job เภสัชกร</button>
+        </div>
+        <div class="setting-section">
+            <label style="font-size: 18px; color: #854d0e;">จัดการ: หัวข้อ Job Based สำหรับ "เจ้าหน้าที่ห้องยา" (รวม 35%)</label>
+            <table id="setting-job-staff"></table>
+            <button class="add-btn" onclick="addSettingTopic('jobStaff')">+ เพิ่มหัวข้อ Job เจ้าหน้าที่</button>
+        </div>
+    </div>
+
+    <!-- ----------------- SECTION 5: DATA MANAGEMENT ----------------- -->
+    <div id="sec-data" class="card">
+        <h2>ประวัติการประเมินที่บันทึกแล้วทั้งหมด</h2>
+        <p>คุณสามารถคลิกปุ่ม <b>"แก้ไข"</b> เพื่อกลับไปแก้คะแนนที่กรอกผิดได้</p>
+        <div class="table-responsive">
+            <table id="data-management-table" style="width:100%; border-collapse: collapse;">
+                <!-- จะถูกเติมด้วย JS -->
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- Data Init ---
+    const defaultPharmacists = [
+        "น.ส.เกษฎา กุลวีระอารีย์", "น.ส.เย็นฤดี เรืองผล", "น.ส.ชญานิษฐ์ สังขพันธ์", 
+        "น.ส.ดวงกมล หลิมปานนท์", "น.ส.ธนิตา พิทักษ์บูรพา", "น.ส.นนทิกานต์ ณ นิโรจน์", 
+        "น.ส.นวกานต์ ชิดไชย", "น.ส.ปกฉัตร จันทรเพ็ญ", "น.ส.ภัทรพร ชุติวิตโภคิน", 
+        "น.ส.รัชนิฎา พงศกร", "น.ส.สายธาร ประเสริฐสรรพ์", "น.ส.สุมนา รตะเสรี", 
+        "นางสาวสุพิชญา จันทรวงศ์", "นายกฤษณะพล วงศ์ใหญ่", "นายจักรพันธุ์ ชมสวน", "นายสาริษฐ์ แก้วสุวรรณ"
+    ];
+
+    const defaultStaffs = [
+        "น.ส. กมลทิพย์ ดำสุวรรณ", "น.ส. กรกมล มาตรา", "น.ส. จารุภรณ์ สงรักษ์", 
+        "น.ส. จิรารัตน์ ชนะกุล", "น.ส. นวลนภา จิตรบุญ", "น.ส. ปัทมา ชูถนอม", 
+        "น.ส. วาสนา พลอยขาว", "น.ส. สุดใจ บุญทอง", "น.ส. สุดารัตน์ เอี้ยวสกุล", 
+        "น.ส. สุพรทิพย์ ปิ่นละมัย", "น.ส. อรยา พรามแผลง", "นาง แจ่มศรี อกนิษฐากร", 
+        "นาย วัลยรัตน์ เอี่ยมสิน", "นาย วิษณุ แจ่มจันทร์", "นาย ไพรัตน์ ชนะกุล"
+    ];
+
+    const coreGroups = [
+        { groupId: 'B', name: 'ความรวดเร็วและความรับผิดชอบ', questions: [{ id: 'B1', text: 'ความรวดเร็วในการทำงาน / ความกระตือรือร้น' }, { id: 'B2', text: 'ความละเอียดรอบคอบในการตรวจสอบ' }, { id: 'B3', text: 'ความรับผิดชอบต่องานที่ได้รับมอบหมาย' }] },
+        { groupId: 'D', name: 'การช่วยเหลือและทำงานเป็นทีม', questions: [{ id: 'D1', text: 'ช่วยเหลือเพื่อนร่วมงาน เช่น ช่วยงานในแผนก' }, { id: 'D2', text: 'การควบคุมอารมณ์ในการทำงาน เช่น การรับมือความเครียด' }, { id: 'D3', text: 'ความมีน้ำใจ / การทำงานเป็นทีม' }] },
+        { groupId: 'M', name: 'ความมีวินัยและการปฏิบัติตามหน้าที่', questions: [{ id: 'M1', text: 'การเข้างานให้ตรงเวลา' }, { id: 'M2', text: 'ไม่ใช้เวลางานในเรื่องส่วนตัวจนมีผลกระทบ' }, { id: 'M3', text: 'ทำงานในตำแหน่งที่รับผิดชอบได้อย่างสมบูรณ์' }] },
+        { groupId: 'S', name: 'การสื่อสารและการแก้ปัญหา', questions: [{ id: 'S1', text: 'การสื่อสาร การรับเรื่อง การส่งเวร' }, { id: 'S2', text: 'การให้ความช่วยเหลือลูกค้า และการติดต่อประสานงาน' }, { id: 'S3', text: 'ความสามารถในการแก้ไขปัญหาเฉพาะหน้า' }] }
+    ];
+
+    let savedSettings = JSON.parse(localStorage.getItem('eval_settings_v10')) || JSON.parse(localStorage.getItem('eval_settings_v9'));
+    let appSettings = {
+        headPharmacist: savedSettings?.headPharmacist || 'ชลิตา ธารสิริโรจน์',
+        headWeight: savedSettings?.headWeight || 50,
+        pharmacists: savedSettings?.pharmacists || defaultPharmacists,
+        staffs: savedSettings?.staffs || defaultStaffs,
+        jobPharma: savedSettings?.jobPharma || [
+            { id: 'JP1', text: '% ของการเข้าร่วมประชุมแผนก', weight: 10 },
+            { id: 'JP2', text: '% ของการสุ่ม FEFO ประจำเดือน', weight: 10 },
+            { id: 'JP3', text: '% ของ Pharmacy Intervention ต่อรายการยาที่ตรวจสอบ', weight: 15 },
+            { id: 'JP4', text: 'จำนวน dispensing error ตั้งแต่level C ขึ้นไป ต่อ 1000 รายการยาที่ตรวจสอบ', weight: 25 },
+            { id: 'JP5', text: 'จำนวน dispensing error ของยาHAD ตั้งแต่ level B ขึ้นไป ต่อรายการยา HAD ที่ตรวจสอบ', weight: 25 },
+            { id: 'JP6', text: 'มีส่วนร่วมอย่างเป็นรูปธรรมในการพัฒนางานคุณภาพของหน่วยงาน', weight: 15 }
+        ],
+        jobStaff: savedSettings?.jobStaff || [
+            { id: 'JS1', text: '% ของการเข้าร่วมประชุมแผนก', weight: 15 },
+            { id: 'JS2', text: '% ที่พบการไม่จัดเรียงยาตาม FEFO', weight: 30 },
+            { id: 'JS3', text: '% ของการตรวจสอบวันหมดอายุยาประจำเดือน', weight: 30 },
+            { id: 'JS4', text: 'จำนวน Pre-dispensing error ต่อ1000 รายการยาที่จัด', weight: 25 }
+        ]
+    };
+
+    let chartPharmaInstance = null;
+    let chartStaffInstance = null;
+
+    function getAllEmployees() { return [...appSettings.pharmacists, ...appSettings.staffs]; }
+
+    function init() {
+        if(!localStorage.getItem('eval_data_v10') && localStorage.getItem('eval_data_v9')) {
+            localStorage.setItem('eval_data_v10', localStorage.getItem('eval_data_v9'));
+        }
+        localStorage.setItem('eval_settings_v10', JSON.stringify(appSettings));
+
+        renderEmployeeSettings(); 
+        document.getElementById('set-head').value = appSettings.headPharmacist;
+        document.getElementById('set-head-weight').value = appSettings.headWeight;
+        document.getElementById('set-peer-weight').value = 100 - appSettings.headWeight;
+
+        renderSettingTables();
+        populateEvaluators();
+        updateEvaluateeList();
+        populateIndividualSelect();
+    }
+
+    function saveSettings() {
+        appSettings.headPharmacist = document.getElementById('set-head').value.trim();
+        localStorage.setItem('eval_settings_v10', JSON.stringify(appSettings));
+        populateEvaluators();
+        updateEvaluateeList();
+        populateIndividualSelect();
+        renderQuestions(); 
+    }
+
+    function updateWeights() {
+        let hw = parseInt(document.getElementById('set-head-weight').value);
+        if (isNaN(hw) || hw < 0) hw = 0;
+        if (hw > 100) hw = 100;
+        document.getElementById('set-head-weight').value = hw;
+        document.getElementById('set-peer-weight').value = 100 - hw;
+        appSettings.headWeight = hw;
+        saveSettings();
+    }
+
+    // --- User Management ---
+    function renderEmployeeSettings() {
+        const renderList = (arr, role) => {
+            return arr.map((name, idx) => `
+                <div class="list-item">
+                    <span>${idx+1}. ${name}</span>
+                    <button class="del-btn" onclick="delEmployee('${role}', ${idx})">ลบ</button>
+                </div>
+            `).join('');
+        };
+        document.getElementById('list-pharma').innerHTML = renderList(appSettings.pharmacists, 'pharma');
+        document.getElementById('list-staff').innerHTML = renderList(appSettings.staffs, 'staff');
+    }
+    function addEmployee(role) {
+        const input = document.getElementById(role === 'pharma' ? 'new-pharma' : 'new-staff');
+        const val = input.value.trim();
+        if(!val) return;
+        if(role === 'pharma') appSettings.pharmacists.push(val);
+        else appSettings.staffs.push(val);
+        input.value = '';
+        saveSettings();
+        renderEmployeeSettings();
+    }
+    function delEmployee(role, index) {
+        if(confirm('ยืนยันการลบรายชื่อนี้?')) {
+            if(role === 'pharma') appSettings.pharmacists.splice(index, 1);
+            else appSettings.staffs.splice(index, 1);
+            saveSettings();
+            renderEmployeeSettings();
+        }
+    }
+
+    function populateEvaluators() {
+        const select = document.getElementById('evaluator');
+        select.innerHTML = '<option value="">-- กรุณาเลือก --</option>';
+        if(appSettings.headPharmacist) {
+            const headOpt = document.createElement('option');
+            headOpt.value = appSettings.headPharmacist;
+            headOpt.text = `★ หัวหน้า: ${appSettings.headPharmacist}`;
+            headOpt.style.fontWeight = 'bold';
+            select.appendChild(headOpt);
+        }
+        const groupPharma = document.createElement('optgroup'); groupPharma.label = `เภสัชกร`;
+        appSettings.pharmacists.forEach(emp => groupPharma.innerHTML += `<option value="${emp}">${emp}</option>`);
+        select.appendChild(groupPharma);
+        const groupStaff = document.createElement('optgroup'); groupStaff.label = `เจ้าหน้าที่ห้องยา`;
+        appSettings.staffs.forEach(emp => groupStaff.innerHTML += `<option value="${emp}">${emp}</option>`);
+        select.appendChild(groupStaff);
+    }
+
+    function updateEvaluateeList() {
+        const evaluator = document.getElementById('evaluator').value;
+        const targetSelect = document.getElementById('evaluatee');
+        if (evaluator) {
+            targetSelect.disabled = false;
+            targetSelect.innerHTML = '<option value="">-- กรุณาเลือกผู้รับการประเมิน --</option>';
+            const groupPharma = document.createElement('optgroup'); groupPharma.label = `เภสัชกร`;
+            appSettings.pharmacists.forEach(emp => { if(emp !== evaluator) groupPharma.innerHTML += `<option value="${emp}">${emp}</option>`; });
+            targetSelect.appendChild(groupPharma);
+            const groupStaff = document.createElement('optgroup'); groupStaff.label = `เจ้าหน้าที่ห้องยา`;
+            appSettings.staffs.forEach(emp => { if(emp !== evaluator) groupStaff.innerHTML += `<option value="${emp}">${emp}</option>`; });
+            targetSelect.appendChild(groupStaff);
+        } else {
+            targetSelect.disabled = true;
+            targetSelect.innerHTML = '<option value="">-- กรุณาเลือกผู้ประเมินก่อน --</option>';
+        }
+        renderQuestions();
+    }
+
+    // --- Forms & Edit Feature ---
+    function renderQuestions() {
+        const container = document.getElementById('questions-container');
+        const evaluator = document.getElementById('evaluator').value;
+        const evaluatee = document.getElementById('evaluatee').value;
+        container.innerHTML = '';
+        if(!evaluatee) return;
+
+        let html = '';
+        const evals = JSON.parse(localStorage.getItem('eval_data_v10')) || [];
+        const existingRecord = evals.find(e => e.evaluator === evaluator && e.evaluatee === evaluatee);
+        
+        if (existingRecord) {
+            html += `<div class="alert-warning">
+                        ⚠️ ตรวจพบข้อมูลที่คุณเคยประเมินพนักงานคนนี้ไว้แล้ว!<br>
+                        <span style="font-weight:normal;">ระบบดึงคะแนนเดิมมาแสดงด้านล่าง แก้ไขแล้วกด "บันทึกผลการประเมิน" เพื่อทับข้อมูลเดิมได้เลย</span>
+                     </div>`;
+        }
+
+        html += `<h3 style="margin-top:20px; color:var(--primary);">ส่วนที่ 1: Core Competency</h3>`;
+        coreGroups.forEach(group => {
+            html += `<div class="question-group"><div class="question-header">หมวด ${group.groupId}</div>`;
+            group.questions.forEach(q => {
+                html += `<div class="question-item"><div style="width: 60%;">${q.id}. ${q.text}</div><div class="rating-options">
+                        ${[1,2,3,4,5].map(s => `<label><span>${s}</span><input type="radio" name="core_${q.id}" value="${s}" required></label>`).join('')}
+                        </div></div>`;
+            });
+            html += `</div>`;
+        });
+
+        if (evaluator === appSettings.headPharmacist) {
+            const isPharma = appSettings.pharmacists.includes(evaluatee);
+            const jobQs = isPharma ? appSettings.jobPharma : appSettings.jobStaff;
+            
+            if(jobQs.length > 0) {
+                html += `<h3 style="margin-top:30px; color:#854d0e;">ส่วนที่ 2: Job Based (เฉพาะหัวหน้าประเมิน)</h3><div class="question-group"><div class="question-header job-based">ประเมินตามตำแหน่งงาน (น้ำหนัก)</div>`;
+                jobQs.forEach(q => {
+                    html += `<div class="question-item"><div style="width: 60%;">${q.text} <span style="color:red;">(น้ำหนัก ${q.weight})</span></div><div class="rating-options">
+                            ${[1,2,3,4,5].map(s => `<label><span>${s}</span><input type="radio" name="job_${q.id}" value="${s}" required></label>`).join('')}
+                            </div></div>`;
+                });
+                html += `</div>`;
+            }
+
+            html += `<h3 style="margin-top:30px; color:#831843;">ส่วนที่ 3: KPI (เฉพาะหัวหน้าประเมิน)</h3>
+                     <div class="question-group"><div class="question-header kpi-based">ประเมินตัวชี้วัดผลงานภาพรวม (%)</div>
+                     <div class="question-item">
+                        <div style="width: 60%; font-weight:bold;">กรุณาระบุ % KPI ที่ทำได้ (0 - 100%)</div>
+                        <div><input type="number" id="kpi_score_input" name="kpi_score" min="0" max="100" placeholder="ใส่ตัวเลข %" required style="width: 120px; font-size:18px; text-align:center;"> %</div>
+                     </div></div>`;
+        }
+        
+        container.innerHTML = html;
+
+        if (existingRecord) {
+            for (const [qId, score] of Object.entries(existingRecord.coreScores)) {
+                const radio = document.querySelector(`input[name="core_${qId}"][value="${score}"]`);
+                if(radio) radio.checked = true;
+            }
+            if(existingRecord.jobScores) {
+                for (const [qId, score] of Object.entries(existingRecord.jobScores)) {
+                    const radio = document.querySelector(`input[name="job_${qId}"][value="${score}"]`);
+                    if(radio) radio.checked = true;
+                }
+            }
+            if(existingRecord.kpiScore !== undefined) {
+                const kpiInput = document.getElementById('kpi_score_input');
+                if(kpiInput) kpiInput.value = existingRecord.kpiScore;
+            }
+        }
+    }
+
+    function saveEvaluation() {
+        const evaluator = document.getElementById('evaluator').value;
+        const evaluatee = document.getElementById('evaluatee').value;
+        if (!evaluator || !evaluatee) return alert('กรุณาเลือกผู้ประเมิน และ ผู้รับการประเมิน');
+
+        const form = document.getElementById('evalForm');
+        const formData = new FormData(form);
+        let evalData = { evaluator, evaluatee, coreScores: {}, jobScores: {}, kpiScore: 0 };
+        let allAnswered = true;
+
+        coreGroups.forEach(g => g.questions.forEach(q => {
+            const val = formData.get(`core_${q.id}`);
+            if(!val) allAnswered = false;
+            else evalData.coreScores[q.id] = parseInt(val);
+        }));
+
+        if (evaluator === appSettings.headPharmacist) {
+            const isPharma = appSettings.pharmacists.includes(evaluatee);
+            const jobQs = isPharma ? appSettings.jobPharma : appSettings.jobStaff;
+            
+            jobQs.forEach(q => { 
+                const val = formData.get(`job_${q.id}`); 
+                if(!val) allAnswered=false; else evalData.jobScores[q.id] = parseInt(val); 
+            });
+
+            const kpiVal = formData.get(`kpi_score`);
+            if(kpiVal === null || kpiVal === '') allAnswered = false;
+            else evalData.kpiScore = parseFloat(kpiVal);
+        }
+
+        if (!allAnswered) return alert('กรุณาให้คะแนน หรือกรอก % ให้ครบทุกข้อ');
+
+        let allEvals = JSON.parse(localStorage.getItem('eval_data_v10')) || [];
+        allEvals = allEvals.filter(e => !(e.evaluator === evaluator && e.evaluatee === evaluatee));
+        allEvals.push(evalData);
+        localStorage.setItem('eval_data_v10', JSON.stringify(allEvals));
+        
+        alert('บันทึกข้อมูลการประเมินสำเร็จ!');
+        form.reset(); document.getElementById('evaluatee').value = ''; renderQuestions();
+    }
+
+    // --- Data Management (Edit/Delete Menu) ---
+    function renderDataTable() {
+        const evals = JSON.parse(localStorage.getItem('eval_data_v10')) || [];
+        const table = document.getElementById('data-management-table');
+        
+        let html = `<thead><tr><th style="background:#e5e7eb;">ผู้ประเมิน</th><th style="background:#e5e7eb;">ผู้รับการประเมิน</th><th style="background:#e5e7eb;">จัดการ</th></tr></thead><tbody>`;
+        
+        if(evals.length === 0) {
+            html += `<tr><td colspan="3">ยังไม่มีข้อมูลการประเมินในระบบ</td></tr>`;
+        } else {
+            evals.sort((a,b) => a.evaluator.localeCompare(b.evaluator));
+            evals.forEach(e => {
+                html += `<tr>
+                            <td>${e.evaluator}</td>
+                            <td>${e.evaluatee}</td>
+                            <td>
+                                <button class="edit-btn" onclick="editRecord('${e.evaluator}', '${e.evaluatee}')">แก้ไข</button>
+                                <button class="del-btn" onclick="deleteRecord('${e.evaluator}', '${e.evaluatee}')">ลบ</button>
+                            </td>
+                         </tr>`;
+            });
+        }
+        html += `</tbody>`;
+        table.innerHTML = html;
+    }
+
+    function editRecord(evaluator, evaluatee) {
+        switchTab('form');
+        document.getElementById('evaluator').value = evaluator;
+        updateEvaluateeList();
+        document.getElementById('evaluatee').value = evaluatee;
+        renderQuestions();
+    }
+
+    function deleteRecord(evaluator, evaluatee) {
+        if(confirm(`ยืนยันการลบข้อมูลการประเมินของ ${evaluator} -> ${evaluatee} ใช่หรือไม่?`)) {
+            let evals = JSON.parse(localStorage.getItem('eval_data_v10')) || [];
+            evals = evals.filter(e => !(e.evaluator === evaluator && e.evaluatee === evaluatee));
+            localStorage.setItem('eval_data_v10', JSON.stringify(evals));
+            renderDataTable();
+        }
+    }
+
+    // --- Calculation & Reports ---
+    function getSummaryData() {
+        const evals = JSON.parse(localStorage.getItem('eval_data_v10')) || [];
+        const allEmps = getAllEmployees();
+        
+        let sumCore = {}, sumJob = {}, sumKpi = {};
+        let detailCore = {}, detailJob = {}, detailKpi = {};
+        
+        allEmps.forEach(e => { sumCore[e]=0; sumJob[e]=0; sumKpi[e]=0; });
+        
+        const weightH = appSettings.headWeight / 100;
+        const weightP = (100 - appSettings.headWeight) / 100;
+        let maxCoreRaw = coreGroups.reduce((acc, g) => acc + (g.questions.length * 5), 0);
+        
+        let maxJobPharma = appSettings.jobPharma.reduce((acc, q) => acc + Number(q.weight), 0);
+        let maxJobStaff = appSettings.jobStaff.reduce((acc, q) => acc + Number(q.weight), 0);
+
+        allEmps.forEach(emp => {
+            const empEvals = evals.filter(e => e.evaluatee === emp);
+            const headEval = empEvals.find(e => e.evaluator === appSettings.headPharmacist);
+            const peerEvals = empEvals.filter(e => e.evaluator !== appSettings.headPharmacist);
+
+            let empCoreTotal = 0;
+            let cBreakdown = {};
+            coreGroups.forEach(g => {
+                let gTotal = 0;
+                g.questions.forEach(q => {
+                    let hScore = headEval ? headEval.coreScores[q.id] : null;
+                    let pAvg = peerEvals.length > 0 ? peerEvals.reduce((sum, e) => sum + e.coreScores[q.id], 0) / peerEvals.length : null;
+                    
+                    let fScore = 0;
+                    if(hScore !== null && pAvg !== null) fScore = (hScore * weightH) + (pAvg * weightP);
+                    else if(hScore !== null) fScore = hScore;
+                    else if(pAvg !== null) fScore = pAvg;
+                    gTotal += fScore;
+                });
+                let gScaled = maxCoreRaw > 0 ? (gTotal / maxCoreRaw) * 30 : 0;
+                let gMaxScaled = maxCoreRaw > 0 ? ((g.questions.length * 5) / maxCoreRaw) * 30 : 0;
+                cBreakdown[g.groupId] = { score: gScaled, max: gMaxScaled };
+                empCoreTotal += gScaled;
+            });
+            sumCore[emp] = empCoreTotal;
+            detailCore[emp] = cBreakdown;
+
+            const isPharma = appSettings.pharmacists.includes(emp);
+            const jobQs = isPharma ? appSettings.jobPharma : appSettings.jobStaff;
+            const maxJ = isPharma ? maxJobPharma : maxJobStaff;
+
+            let jBreakdown = [];
+            let jTotalWeighted = 0;
+            if(headEval && headEval.jobScores) {
+                jobQs.forEach(q => {
+                    let s = headEval.jobScores[q.id] || 0;
+                    let w = (s / 5) * q.weight;
+                    jTotalWeighted += w;
+                    jBreakdown.push({ text: q.text, weight: q.weight, score: w });
+                });
+            }
+            sumJob[emp] = maxJ > 0 ? (jTotalWeighted / maxJ) * 35 : 0;
+            detailJob[emp] = { items: jBreakdown, rawTotal: jTotalWeighted, maxRaw: maxJ };
+
+            let kpiIn = (headEval && headEval.kpiScore !== undefined) ? headEval.kpiScore : 0;
+            let kpiScaled = (kpiIn / 100) * 35;
+            sumKpi[emp] = kpiScaled;
+            detailKpi[emp] = { input: kpiIn, scaled: kpiScaled };
+        });
+
+        return { sumCore, sumJob, sumKpi, detailCore, detailJob, detailKpi, evals, allEmps, maxCoreRaw, maxJobPharma, maxJobStaff };
+    }
+
+    function buildCoreTableHTML(sortedEmps, data, headerClass) {
+        let html = `<table><thead><tr><th rowspan="2" class="${headerClass} row-header">หัวข้อ (Core Competency)</th>`;
+        sortedEmps.forEach(emp => html += `<th class="${headerClass}">${emp}</th>`);
+        html += `</tr><tr>`;
+        sortedEmps.forEach(e => html += `<th><small>คะแนนดิบ</small></th>`);
+        html += `</tr></thead><tbody>`;
+
+        const weightH = appSettings.headWeight / 100;
+        const weightP = (100 - appSettings.headWeight) / 100;
+
+        coreGroups.forEach(group => {
+            group.questions.forEach(q => {
+                html += `<tr><td class="row-header">${q.id} ${q.text}</td>`;
+                sortedEmps.forEach(emp => {
+                    const empEvals = data.evals.filter(e => e.evaluatee === emp);
+                    const headEval = empEvals.find(e => e.evaluator === appSettings.headPharmacist);
+                    const peerEvals = empEvals.filter(e => e.evaluator !== appSettings.headPharmacist);
+                    
+                    let hScore = headEval ? headEval.coreScores[q.id] : null;
+                    let pAvg = peerEvals.length > 0 ? peerEvals.reduce((sum, e) => sum + e.coreScores[q.id], 0) / peerEvals.length : null;
+                    
+                    let fScore = 0;
+                    if (hScore !== null && pAvg !== null) fScore = (hScore * weightH) + (pAvg * weightP);
+                    else if (hScore !== null) fScore = hScore;
+                    else if (pAvg !== null) fScore = pAvg;
+
+                    html += `<td>${fScore > 0 ? fScore.toFixed(2) : '-'}</td>`;
+                });
+                html += `</tr>`;
+            });
+        });
+        html += `<tr class="bg-gray"><td class="row-header">คะแนนรวม Core (แปลง 30%)</td>`;
+        sortedEmps.forEach(emp => html += `<td>${data.sumCore[emp].toFixed(2)}</td>`);
+        html += `</tr></tbody></table>`;
+        return html;
+    }
+
+    function buildJobTableHTML(sortedEmps, jobQs, maxW, data, headerClass) {
+        let html = `<table><thead><tr><th class="${headerClass} row-header">หัวข้อ Job Based (ประเมินโดยหัวหน้า)</th>`;
+        sortedEmps.forEach(emp => html += `<th class="${headerClass}">${emp}</th>`);
+        html += `</tr></thead><tbody>`;
+        
+        jobQs.forEach(q => {
+            html += `<tr><td class="row-header">${q.text} <br><small style="color:red">(น้ำหนัก ${q.weight})</small></td>`;
+            sortedEmps.forEach(emp => {
+                const headEval = data.evals.find(e => e.evaluatee === emp && e.evaluator === appSettings.headPharmacist);
+                if(headEval && headEval.jobScores && headEval.jobScores[q.id]) {
+                    const wScore = (headEval.jobScores[q.id] / 5) * q.weight;
+                    html += `<td>${wScore.toFixed(2)}</td>`;
+                } else {
+                    html += `<td>-</td>`;
+                }
+            });
+            html += `</tr>`;
+        });
+        html += `<tr class="bg-gray"><td class="row-header">คะแนนรวม Job (แปลง 35%)</td>`;
+        sortedEmps.forEach(emp => html += `<td>${data.sumJob[emp].toFixed(2)}</td>`);
+        html += `</tr></tbody></table>`;
+        return html;
+    }
+
+    function buildKpiTableHTML(sortedEmps, data, headerClass) {
+        let html = `<table><thead><tr><th class="${headerClass} row-header">ผู้รับการประเมิน</th><th>% ผลงานที่ประเมิน</th><th>คะแนนที่ได้ (แปลง 35%)</th></tr></thead><tbody>`;
+        sortedEmps.forEach(emp => {
+            html += `<tr><td class="row-header">${emp}</td>
+                        <td>${data.detailKpi[emp].input} %</td>
+                        <td style="font-weight:bold;">${data.detailKpi[emp].scaled.toFixed(2)}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        return html;
+    }
+
+    function buildSummaryTableHTML(sortedEmps, data, headerClass) {
+        let html = `<table><thead><tr><th class="${headerClass} row-header">ผู้รับการประเมิน</th><th>Core Com (30%)</th><th>Job Based (35%)</th><th>KPI (35%)</th><th style="color:red; font-size:16px;">รวมสุทธิ (100%)</th></tr></thead><tbody>`;
+        sortedEmps.forEach(emp => {
+            let total = data.sumCore[emp] + data.sumJob[emp] + data.sumKpi[emp];
+            html += `<tr><td class="row-header">${emp}</td>
+                      <td>${data.sumCore[emp].toFixed(2)}</td>
+                      <td>${data.sumJob[emp].toFixed(2)}</td>
+                      <td>${data.sumKpi[emp].toFixed(2)}</td>
+                      <td style="font-weight:bold; color:red; font-size:16px;">${total.toFixed(2)}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        return html;
+    }
+
+    function generateReport() {
+        const data = getSummaryData();
+        const sortOrder = document.getElementById('report-sort-order').value;
+
+        // V10: Advance Sorting Logic
+        let sortedPharma = [...appSettings.pharmacists];
+        let sortedStaff = [...appSettings.staffs];
+
+        const sortFn = (a, b) => {
+            const totalA = data.sumCore[a] + data.sumJob[a] + data.sumKpi[a];
+            const totalB = data.sumCore[b] + data.sumJob[b] + data.sumKpi[b];
+
+            if(sortOrder === 'total_desc') {
+                return totalB - totalA;
+            } else if(sortOrder === 'total_asc') {
+                return totalA - totalB;
+            } else if(sortOrder === 'core_desc') {
+                return data.sumCore[b] - data.sumCore[a];
+            } else if(sortOrder === 'job_desc') {
+                return data.sumJob[b] - data.sumJob[a];
+            } else if(sortOrder === 'kpi_desc') {
+                return data.sumKpi[b] - data.sumKpi[a];
+            } else {
+                return a.localeCompare(b); // name_asc ก-ฮ
+            }
+        };
+
+        sortedPharma.sort(sortFn);
+        sortedStaff.sort(sortFn);
+
+        // Core Com Tables
+        document.getElementById('report-core-title').innerText = `สัดส่วนน้ำหนัก: หัวหน้า ${appSettings.headWeight}% / เพื่อน ${100 - appSettings.headWeight}%`;
+        document.getElementById('div-core-pharma').innerHTML = buildCoreTableHTML(sortedPharma, data, 'head-pharma');
+        document.getElementById('div-core-staff').innerHTML = buildCoreTableHTML(sortedStaff, data, 'head-staff');
+
+        // Job Based Tables
+        document.getElementById('div-job-pharma').innerHTML = buildJobTableHTML(sortedPharma, appSettings.jobPharma, data.maxJobPharma, data, 'head-pharma');
+        document.getElementById('div-job-staff').innerHTML = buildJobTableHTML(sortedStaff, appSettings.jobStaff, data.maxJobStaff, data, 'head-staff');
+
+        // KPI Tables
+        document.getElementById('div-kpi-pharma').innerHTML = buildKpiTableHTML(sortedPharma, data, 'head-pharma');
+        document.getElementById('div-kpi-staff').innerHTML = buildKpiTableHTML(sortedStaff, data, 'head-staff');
+
+        // Summary Tables
+        document.getElementById('div-sum-pharma').innerHTML = buildSummaryTableHTML(sortedPharma, data, 'head-pharma');
+        document.getElementById('div-sum-staff').innerHTML = buildSummaryTableHTML(sortedStaff, data, 'head-staff');
+
+        // Render Charts with Sorted Data
+        renderCharts(data, sortedPharma, sortedStaff);
+    }
+
+    function renderCharts(data, sortedPharma, sortedStaff) {
+        const ctxPharma = document.getElementById('pharmaChart').getContext('2d');
+        const ctxStaff = document.getElementById('staffChart').getContext('2d');
+
+        if(chartPharmaInstance) chartPharmaInstance.destroy();
+        if(chartStaffInstance) chartStaffInstance.destroy();
+
+        const buildChartConfig = (title, labels, coreData, jobData, kpiData) => ({
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Core Com (30%)', data: coreData, backgroundColor: '#3b82f6' },
+                    { label: 'Job Based (35%)', data: jobData, backgroundColor: '#f59e0b' },
+                    { label: 'KPI (35%)', data: kpiData, backgroundColor: '#ec4899' }
+                ]
+            },
+            options: { plugins: { title: { display: true, text: title, font: { size: 18 } } }, responsive: true, scales: { x: { stacked: true }, y: { stacked: true, max: 100 } } }
+        });
+
+        chartPharmaInstance = new Chart(ctxPharma, buildChartConfig('สรุปผลคะแนน เภสัชกร (เต็ม 100%)', sortedPharma, 
+            sortedPharma.map(e => data.sumCore[e]), sortedPharma.map(e => data.sumJob[e]), sortedPharma.map(e => data.sumKpi[e])
+        ));
+
+        chartStaffInstance = new Chart(ctxStaff, buildChartConfig('สรุปผลคะแนน เจ้าหน้าที่ห้องยา (เต็ม 100%)', sortedStaff, 
+            sortedStaff.map(e => data.sumCore[e]), sortedStaff.map(e => data.sumJob[e]), sortedStaff.map(e => data.sumKpi[e])
+        ));
+    }
+
+    // --- Individual Report ---
+    function populateIndividualSelect() {
+        const select = document.getElementById('ind-select');
+        select.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
+        appSettings.pharmacists.forEach(e => select.innerHTML += `<option value="${e}">${e}</option>`);
+        appSettings.staffs.forEach(e => select.innerHTML += `<option value="${e}">${e}</option>`);
+    }
+
+    function renderIndividualReport() {
+        const emp = document.getElementById('ind-select').value;
+        const content = document.getElementById('ind-content');
+        if(!emp) { content.style.display = 'none'; return; }
+
+        const data = getSummaryData();
+        const coreTotal = data.sumCore[emp] || 0;
+        const jobTotal = data.sumJob[emp] || 0;
+        const kpiTotal = data.sumKpi[emp] || 0;
+        const grandTotal = coreTotal + jobTotal + kpiTotal;
+
+        document.getElementById('ind-name').innerText = emp;
+        document.getElementById('ind-total').innerText = grandTotal.toFixed(2);
+        
+        let html = '';
+        html += `<tr><td colspan="2" class="ind-head" style="color:#2563eb;">1. Core Competency (ได้ ${coreTotal.toFixed(2)} / 30.00)</td></tr>`;
+        const cDet = data.detailCore[emp];
+        ['B', 'D', 'M', 'S'].forEach(k => {
+            if(cDet[k]) html += `<tr><td style="padding-left:30px;">- หมวด ${k}</td><td class="val">${cDet[k].score.toFixed(2)} / ${cDet[k].max.toFixed(2)}</td></tr>`;
+        });
+
+        html += `<tr><td colspan="2" class="ind-head" style="color:#854d0e; border-top:2px solid #ccc;">2. Job Based (ได้ ${jobTotal.toFixed(2)} / 35.00)</td></tr>`;
+        const jDet = data.detailJob[emp];
+        if(jDet.items.length > 0) {
+            jDet.items.forEach(j => {
+                html += `<tr><td style="padding-left:30px; font-size:14px;">- ${j.text}</td><td class="val">${j.score.toFixed(2)} / ${j.weight.toFixed(2)}</td></tr>`;
+            });
+            if (jDet.maxRaw !== 35) {
+                html += `<tr><td style="padding-left:30px; font-style:italic; color:gray; font-size:12px;">(คะแนนดิบรวม ${jDet.rawTotal.toFixed(2)}/${jDet.maxRaw} ถูกแปลงสัดส่วนเป็น ${jobTotal.toFixed(2)}/35)</td><td class="val"></td></tr>`;
+            }
+        } else {
+            html += `<tr><td style="padding-left:30px; color:red;">ยังไม่มีข้อมูลประเมิน</td><td class="val"></td></tr>`;
+        }
+
+        html += `<tr><td colspan="2" class="ind-head" style="color:#831843; border-top:2px solid #ccc;">3. KPI (ได้ ${kpiTotal.toFixed(2)} / 35.00)</td></tr>`;
+        const kDet = data.detailKpi[emp];
+        html += `<tr><td style="padding-left:30px;">- ผลงานที่ประเมินได้ (${kDet.input}%)</td><td class="val">${kDet.scaled.toFixed(2)} / 35.00</td></tr>`;
+
+        document.getElementById('ind-detail-table').innerHTML = html;
+        content.style.display = 'block';
+    }
+
+    // --- Settings Topics ---
+    function renderSettingTables() {
+        const renderTbl = (arr, varName) => {
+            return `<tr><th style="width:60%">หัวข้อการประเมิน</th><th>น้ำหนัก</th><th>จัดการ</th></tr>` + 
+            arr.map((q, idx) => `<tr>
+                <td><input type="text" value="${q.text}" onchange="updateSettingTopic('${varName}', ${idx}, 'text', this.value)"></td>
+                <td><input type="number" value="${q.weight}" onchange="updateSettingTopic('${varName}', ${idx}, 'weight', this.value)"></td>
+                <td><button class="del-btn" onclick="delSettingTopic('${varName}', ${idx})">ลบ</button></td>
+            </tr>`).join('');
+        };
+        document.getElementById('setting-job-pharma').innerHTML = renderTbl(appSettings.jobPharma, 'jobPharma');
+        document.getElementById('setting-job-staff').innerHTML = renderTbl(appSettings.jobStaff, 'jobStaff');
+    }
+    function addSettingTopic(varName) {
+        appSettings[varName].push({ id: `${varName.charAt(0).toUpperCase()}${Date.now()}`, text: 'หัวข้อใหม่', weight: 10 });
+        saveSettings(); renderSettingTables();
+    }
+    function updateSettingTopic(varName, index, key, value) {
+        appSettings[varName][index][key] = key === 'weight' ? Number(value) : value;
+        saveSettings();
+    }
+    function delSettingTopic(varName, index) {
+        appSettings[varName].splice(index, 1);
+        saveSettings(); renderSettingTables();
+    }
+
+    // --- Utils ---
+    function switchTab(tab) {
+        ['form', 'report', 'individual', 'settings', 'data'].forEach(t => {
+            document.getElementById(`sec-${t}`).classList.remove('active');
+            document.getElementById(`btn-${t}`).classList.remove('active');
+        });
+        document.getElementById(`sec-${tab}`).classList.add('active');
+        document.getElementById(`btn-${tab}`).classList.add('active');
+        
+        if(tab === 'report') generateReport();
+        if(tab === 'data') renderDataTable();
+    }
+
+    function clearAllData() {
+        if(confirm("ยืนยันการลบ 'ข้อมูลการประเมินทั้งหมด' ใช่หรือไม่? (ระวัง: ข้อมูลคะแนนจะหายทั้งหมด แต่การตั้งค่าจะไม่ถูกลบ)")) {
+            localStorage.removeItem('eval_data_v10');
+            if(chartPharmaInstance) chartPharmaInstance.destroy();
+            if(chartStaffInstance) chartStaffInstance.destroy();
+            generateReport(); 
+            renderDataTable();
+            alert("ล้างคะแนนเรียบร้อยแล้ว");
+        }
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>

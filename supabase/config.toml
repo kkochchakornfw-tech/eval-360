@@ -1,0 +1,12 @@
+# Minimal local config for the Supabase CLI. Production settings live in the dashboard.
+project_id = "eval-360"
+
+[auth]
+enable_signup = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/confirm", "http://localhost:3000/auth/callback"]
+minimum_password_length = 8
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]

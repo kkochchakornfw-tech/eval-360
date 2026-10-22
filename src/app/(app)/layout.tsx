@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { canAdmin } from "@/lib/roles";
 import { requireProfile } from "@/lib/session";
@@ -20,6 +21,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-xs text-muted">
+        <Link href="/reset-password" className="hover:text-ink">
+          เปลี่ยน PIN
+        </Link>
         <form action={signOutAction}>
           <button className="inline-flex items-center gap-1 hover:text-ink">
             <LogOut size={13} /> ออกจากระบบ
@@ -74,6 +78,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-2">
+                <Link href="/reset-password" className="btn btn-sm">
+                  เปลี่ยน PIN
+                </Link>
                 <form action={signOutAction}>
                   <button className="btn btn-sm btn-danger">
                     <LogOut size={14} /> ออกจากระบบ

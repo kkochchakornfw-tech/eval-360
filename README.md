@@ -6,7 +6,7 @@ Next.js (App Router) + TypeScript + Tailwind + Supabase. รายละเอ�
 ## ตั้งค่าครั้งแรก
 
 1. สร้างโปรเจกต์ Supabase (region `ap-southeast-1`)
-2. **Authentication → Sign In / Providers**: เปิด "Allow new users to sign up" ไว้ (ล็อกอิน Google ต้องสร้างผู้ใช้ได้) — คนนอกรายชื่อยังเข้าไม่ได้ เพราะฐานข้อมูลปฏิเสธอีเมล Google ที่ไม่ได้ลงทะเบียน (migration `0005_google_login.sql`)
+2. **Authentication → Sign In / Providers**: **ปิด** "Allow new users to sign up" (ใช้ชื่อ + PIN อย่างเดียว การสร้างบัญชีทำจากฝั่งเซิร์ฟเวอร์ ไม่ต้องเปิดสมัครเอง) ต้องเปิดเฉพาะเมื่อจะใช้ปุ่ม Google ตามหัวข้อด้านล่าง ซึ่ง migration `0007` กันคนนอกสมัครเองไว้ให้อยู่แล้ว
 3. (ไม่บังคับ ตอนนี้ไม่มีการส่งอีเมลเชิญแล้ว) **Authentication → SMTP**: ตั้ง custom SMTP ถ้าจะใช้ลิงก์ตั้งรหัสผ่านทางอีเมลของผู้ดูแลระบบ
 4. **Authentication → URL Configuration**: ใส่ Site URL (เช่น `https://your-app.vercel.app`) และเพิ่ม Redirect URLs
    `https://your-app.vercel.app/auth/confirm` และ `https://your-app.vercel.app/auth/callback`
@@ -23,16 +23,18 @@ Next.js (App Router) + TypeScript + Tailwind + Supabase. รายละเอ�
    - Reset password: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/reset-password`
 8. **สร้างแอดมินคนแรก** (ยังไม่มีใครเข้าระบบได้ จึงสร้างจากสคริปต์):
    ```bash
-   npm run create:admin -- "ชื่อ-สกุล" "อีเมล-google-ของแอดมิน@gmail.com"
+   npm run create:admin -- "ชื่อ-สกุล"
    ```
-   แล้วเข้าเว็บกด "เข้าสู่ระบบด้วย Google" ด้วยอีเมลนั้น (ต้องตั้งค่า Google ตามหัวข้อถัดไปก่อน)
-9. เติมรายชื่อผู้ใช้: คัดลอก `scripts/users.template.csv` เป็น `scripts/users.csv` ใส่ **อีเมล Google** ของแต่ละคน แล้วรัน
+   สคริปต์แสดง PIN 8 หลักครั้งเดียว เข้าหน้า login เลือกชื่อ ใส่ PIN แล้วตั้ง PIN ใหม่
+9. เติมรายชื่อผู้ใช้: คัดลอก `scripts/users.template.csv` เป็น `scripts/users.csv` แล้วรัน
    ```bash
    npm run seed:users
    ```
-   (เพิ่มรายชื่อพร้อมอีเมล Google ไม่สร้างรหัสผ่าน รันซ้ำได้) หรือเพิ่ม/แก้ทีละคนที่เมนู ตั้งค่าระบบ → ผู้ใช้
+   (เพิ่มรายชื่อโดยยังไม่มีบัญชี รันซ้ำได้) จากนั้นเข้าเมนู ตั้งค่าระบบ → ผู้ใช้ กด **สร้างบัญชีให้ทุกคนที่ยังไม่มี** ระบบแสดง PIN ของแต่ละคนครั้งเดียว คัดลอกไปแจก (ต้องรัน migration ครบถึง `0007` ก่อน)
 
-## ตั้งค่าล็อกอินด้วย Google
+## ตั้งค่าล็อกอินด้วย Google (ไม่บังคับ)
+
+ตอนนี้ระบบใช้ชื่อ + PIN เป็นหลัก ส่วนนี้ทำเมื่ออยากเปิดปุ่ม Google เพิ่ม: ทำตามขั้นตอนด้านล่าง แล้วตั้ง `NEXT_PUBLIC_GOOGLE_LOGIN=on` ใน `.env.local` / ตัวแปรของเซิร์ฟเวอร์ที่ deploy
 
 ทำครั้งเดียว ใช้เวลาประมาณ 15 นาที ต้องมีบัญชี Google (Gmail ก็ได้) และสิทธิ์เข้า Supabase dashboard ของโปรเจกต์
 ก่อนเริ่ม ให้รู้ 2 ค่านี้ไว้:
@@ -67,7 +69,7 @@ Next.js (App Router) + TypeScript + Tailwind + Supabase. รายละเอ�
    - **Site URL**: URL ของเว็บแอป (เช่น `https://your-app.vercel.app`)
    - **Redirect URLs**: ต้องมี `https://your-app.vercel.app/auth/callback` (และ `http://localhost:3000/auth/callback` ถ้าทดสอบในเครื่อง)
 6. ตรวจว่า **Allow new users to sign up** เปิดอยู่ (ดูข้อ 2 ด้านบน)
-7. ถ้ายังไม่ได้รัน migration ล่าสุด ให้รัน `npx supabase db push` เพื่อให้มี `0005_google_login.sql` และ `0006_close_open_signup.sql` (ตัวหลังปิดช่องที่คนนอกสมัครด้วยอีเมล/รหัสผ่านผ่าน API ได้ ต้องรันก่อนเปิดให้ใช้งานจริง)
+7. ถ้ายังไม่ได้รัน migration ล่าสุด ให้รัน `npx supabase db push` เพื่อให้มี `0005_google_login.sql`, `0006_close_open_signup.sql` และ `0007_pin_signup_gate.sql` (ตัวหลังปิดช่องที่คนนอกสมัครด้วยอีเมล/รหัสผ่านผ่าน API ได้ ต้องรันก่อนเปิดให้ใช้งานจริง)
 
 ### ส่วน C — ลงทะเบียนอีเมลของแต่ละคนในแอป
 

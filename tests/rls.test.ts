@@ -436,3 +436,59 @@ describe("open sign-up is closed", () => {
     }
   });
 });
+
+describe("PIN accounts under the sign-up gate (migration 0007)", () => {
+  const withGate = async (fn: () => Promise<void>) => {
+    await db.exec("set app.allow_password_signup = 'off'");
+    try {
+      await fn();
+    } finally {
+      await db.exec("set app.allow_password_signup = 'on'");
+    }
+  };
+
+  it("links a roster profile to the server-created PIN user", async () => {
+    const id = (
+      await db.query<{ id: string }>(
+        `insert into profiles (full_name, role, staff_group_id, has_account)
+         values ('Pin Person', 'staff', 1, false) returning id`,
+      )
+    ).rows[0].id;
+    const email = `${id}@pin.eval360.local`;
+    await db.exec(`update profiles set email = '${email}' where id = '${id}'`);
+    const authId = "00000000-0000-0000-0000-0000000000f1";
+    await withGate(async () => {
+      await db.exec(`insert into auth.users (id, email) values ('${authId}', '${email}')`);
+    });
+    const p = await db.query<{ has_account: boolean }>("select has_account from profiles where id = $1", [authId]);
+    expect(p.rows[0].has_account).toBe(true);
+  });
+
+  it("rejects a pin-domain address that no roster profile carries", async () => {
+    await withGate(async () => {
+      await expect(
+        db.exec(
+          "insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000f2', 'guess@pin.eval360.local')",
+        ),
+      ).rejects.toThrow();
+    });
+  });
+
+  it("does not let a stranger take over a roster profile by signing up with its real email", async () => {
+    await db.exec(
+      `insert into profiles (full_name, role, staff_group_id, has_account, email)
+       values ('Real Mail Person', 'staff', 1, false, 'victim@example.com')`,
+    );
+    await withGate(async () => {
+      await expect(
+        db.exec(
+          "insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000f3', 'victim@example.com')",
+        ),
+      ).rejects.toThrow();
+    });
+    const still = await db.query<{ has_account: boolean }>(
+      "select has_account from profiles where email = 'victim@example.com'",
+    );
+    expect(still.rows[0].has_account).toBe(false);
+  });
+});

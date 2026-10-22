@@ -40,7 +40,7 @@ export default async function LoginPage({
           360
         </div>
         <h1 className="text-2xl font-semibold tracking-tight">ระบบประเมิน 360 องศา</h1>
-        <p className="mt-1.5 text-sm text-muted">เข้าสู่ระบบด้วยบัญชี Google</p>
+        <p className="mt-1.5 text-sm text-muted">เข้าสู่ระบบด้วยชื่อและรหัส PIN</p>
         {notice && (
           <p className="mt-5 rounded-xl border border-danger/30 bg-orange-50/80 px-4 py-3 text-sm text-danger">
             {notice}

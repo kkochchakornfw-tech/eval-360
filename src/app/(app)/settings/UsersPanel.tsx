@@ -1,10 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Search, X } from "lucide-react";
 import { useRun } from "@/components/useRun";
 import { Spinner } from "@/components/Spinner";
+import { createAccountsAction, resetSecretAction, type IssuedSecret } from "@/app/actions/accounts";
 import { AddPersonForm } from "./AddPersonForm";
+import { SecretsDialog } from "./SecretsDialog";
 import { deleteUserAction, renameStaffGroupAction, updateUserAction } from "@/app/actions/settings";
 import type { Profile, StaffGroup } from "@/types/database";
 
@@ -50,7 +53,7 @@ function StatusPill({ user }: { user: Profile }) {
   }
   if (!user.has_account) {
     return (
-      <span className="rounded-full bg-orange-50 px-3 py-1 text-xs text-danger">ยังไม่เคยเข้าระบบ</span>
+      <span className="rounded-full bg-orange-50 px-3 py-1 text-xs text-danger">ยังไม่มีบัญชี</span>
     );
   }
   return <span className="rounded-full bg-accent-soft px-3 py-1 text-xs text-accent">ใช้งานอยู่</span>;
@@ -61,11 +64,13 @@ function EditPanel({
   groups,
   isSelf,
   onClose,
+  onSecrets,
 }: {
   user: Profile;
   groups: StaffGroup[];
   isSelf: boolean;
   onClose: () => void;
+  onSecrets: (s: IssuedSecret[]) => void;
 }) {
   const { run, pending } = useRun();
   const [d, setD] = useState<Draft>({
@@ -77,6 +82,17 @@ function EditPanel({
     isActive: user.is_active,
     googleEmail: user.google_email ?? "",
   });
+
+  const [resetting, setResetting] = useState(false);
+
+  async function resetSecret() {
+    if (!confirm(`สร้าง PIN ใหม่ให้ ${user.full_name}? รหัสเดิมจะใช้ไม่ได้ทันที และเปลี่ยนไปเข้าด้วยชื่อ + PIN`)) return;
+    setResetting(true);
+    const res = await resetSecretAction({ id: user.id });
+    setResetting(false);
+    if (res.ok) onSecrets(res.secrets);
+    else alert(res.error);
+  }
 
   const save = (patch: Partial<Draft> = {}) => {
     const v = { ...d, ...patch };
@@ -162,6 +178,12 @@ function EditPanel({
           {pending && <Spinner size={14} />}
           บันทึก
         </button>
+        {user.has_account && (
+          <button className="btn btn-sm" disabled={pending || resetting} onClick={resetSecret}>
+            {resetting && <Spinner size={14} />}
+            สร้างรหัสใหม่ให้
+          </button>
+        )}
         {!isSelf && (
           <button
             className={`btn btn-sm ${user.is_active ? "btn-danger" : ""}`}
@@ -252,6 +274,24 @@ export function UsersPanel({
   const [filter, setFilter] = useState<Filter>("all");
   const [showInvite, setShowInvite] = useState(false);
   const [open, setOpen] = useState<{ id: string; kind: "edit" } | null>(null);
+  const [secrets, setSecrets] = useState<IssuedSecret[] | null>(null);
+  const [creating, setCreating] = useState<string | "all" | null>(null);
+  const router = useRouter();
+
+  const pendingCount = users.filter((u) => !u.has_account && u.is_active).length;
+
+  async function createAccounts(id?: string) {
+    if (!id && !confirm(`สร้างบัญชีให้ ${pendingCount} คนที่ยังไม่มีบัญชี?\nระบบจะแสดงรหัสของแต่ละคนให้ครั้งเดียว`)) return;
+    setCreating(id ?? "all");
+    const res = await createAccountsAction({ id });
+    setCreating(null);
+    if (res.ok) {
+      setSecrets(res.secrets);
+      router.refresh();
+    } else {
+      alert(res.error);
+    }
+  }
 
   const groupName = (id: number | null) => groups.find((g) => g.id === id)?.name ?? "พนักงาน";
 
@@ -264,7 +304,7 @@ export function UsersPanel({
       label: g.name,
       count: users.filter((u) => u.staff_group_id === g.id).length,
     })),
-    { key: "pending", label: "ยังไม่เคยเข้าระบบ", count: users.filter((u) => !u.has_account).length },
+    { key: "pending", label: "ยังไม่มีบัญชี", count: users.filter((u) => !u.has_account).length },
   ];
 
   const shown = useMemo(() => {
@@ -295,6 +335,12 @@ export function UsersPanel({
           />
         </div>
         <div className="flex flex-wrap gap-2">
+          {pendingCount > 0 && (
+            <button className="btn" disabled={creating !== null} onClick={() => createAccounts()}>
+              {creating === "all" && <Spinner />}
+              {creating === "all" ? "กำลังสร้างบัญชี…" : `สร้างบัญชีให้ทุกคนที่ยังไม่มี (${pendingCount})`}
+            </button>
+          )}
           <button className="btn btn-primary" onClick={() => setShowInvite((v) => !v)}>
             <Plus size={17} /> เพิ่มผู้ใช้
           </button>
@@ -302,7 +348,7 @@ export function UsersPanel({
       </div>
 
       {showInvite && (
-        <AddPersonForm groups={groups} onDone={() => setShowInvite(false)} />
+        <AddPersonForm groups={groups} onDone={() => setShowInvite(false)} onSecrets={setSecrets} />
       )}
 
       <div className="flex flex-wrap gap-2">
@@ -342,7 +388,7 @@ export function UsersPanel({
                         {u.full_name}
                       </p>
                       <p className="truncate text-xs text-muted">
-                        {u.google_email ?? u.email ?? "ยังไม่ได้ใส่อีเมล Google"}
+                        {u.code_login ? "เข้าด้วยชื่อ + รหัส" : (u.google_email ?? u.email ?? "ยังไม่มีบัญชี")}
                       </p>
                     </div>
                     <p className="order-3 text-xs text-muted md:order-none md:text-sm">
@@ -356,6 +402,16 @@ export function UsersPanel({
                       <StatusPill user={u} />
                     </div>
                     <div className="row-span-2 flex flex-wrap justify-end gap-2 md:row-span-1">
+                      {!u.has_account && u.is_active && (
+                        <button
+                          className="btn btn-sm btn-primary"
+                          disabled={creating !== null}
+                          onClick={() => createAccounts(u.id)}
+                        >
+                          {creating === u.id && <Spinner size={14} />}
+                          สร้างบัญชี
+                        </button>
+                      )}
                       <button
                         className="btn btn-sm"
                         onClick={() => setOpen(isOpen && open?.kind === "edit" ? null : { id: u.id, kind: "edit" })}
@@ -371,6 +427,7 @@ export function UsersPanel({
                       groups={groups}
                       isSelf={u.id === selfId}
                       onClose={() => setOpen(null)}
+                      onSecrets={setSecrets}
                     />
                   )}
                 </li>
@@ -381,6 +438,7 @@ export function UsersPanel({
       )}
 
       <GroupNames groups={groups} />
+      {secrets && <SecretsDialog secrets={secrets} onClose={() => setSecrets(null)} />}
     </div>
   );
 }

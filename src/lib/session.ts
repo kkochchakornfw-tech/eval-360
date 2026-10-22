@@ -18,11 +18,13 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   return (data as Profile | null) ?? null;
 });
 
-export async function requireProfile(): Promise<Profile> {
+export async function requireProfile(opts: { allowMustChange?: boolean } = {}): Promise<Profile> {
   const profile = await getProfile();
   if (!profile) redirect("/login");
   // deactivated accounts: sign out (route handler can clear the cookie), then back to login
   if (!profile.is_active) redirect("/auth/signout?error=inactive");
+  // first sign-in with a generated PIN / temporary password: choose your own first
+  if (profile.must_change_password && !opts.allowMustChange) redirect("/reset-password");
   return profile;
 }
 

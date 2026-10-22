@@ -1,0 +1,19 @@
+# Pings the deployed app twice a week so the free Supabase project is not paused for inactivity.
+# Set the repository variable APP_URL (Settings -> Secrets and variables -> Actions -> Variables),
+# e.g. https://eval-360.onrender.com . Without it this job does nothing.
+name: keepalive
+on:
+  schedule:
+    - cron: "0 3 * * 1,4"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/health
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          if [ -z "$APP_URL" ]; then echo "APP_URL not set, skipping"; exit 0; fi
+          # first call may take a minute while a sleeping free instance wakes up
+          curl -fsS --retry 3 --retry-delay 30 --max-time 120 "$APP_URL/api/health"

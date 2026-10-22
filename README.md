@@ -114,10 +114,9 @@ Next.js (App Router) + TypeScript + Tailwind + Supabase. รายละเอ�
 
 โปรเจกต์ Supabase แผนฟรีถูกพักอัตโนมัติถ้าไม่มีการใช้งานราว 1 สัปดาห์ ทางป้องกัน:
 
-1. สมัคร UptimeRobot (ฟรี) <https://uptimerobot.com> → **Add New Monitor** ชนิด HTTP(s)
-   URL: `https://<url ของคุณ>/api/health` ช่วงเวลาเช็ก 5 นาที (ค่าฟรีต่ำสุด) เพื่อให้เว็บไม่หลับด้วย
-   (หน้านี้เรียกฐานข้อมูลจริงทุกครั้ง จึงนับเป็นการใช้งาน)
-2. ถ้าโปรเจกต์ถูกพักไปแล้ว ให้เข้า Supabase dashboard กด **Restore project**
+1. **อย่าใช้ UptimeRobot ถี่ ๆ** ถ้ามีเว็บอื่นบน Render ฟรีอยู่แล้ว: Render ฟรีให้ชั่วโมงเปิดเครื่องรวมต่อบัญชีประมาณ 750 ชั่วโมง/เดือน (ตัวเลขเช็กที่หน้าเว็บ Render) การ ping ทุก 5 นาทีทำให้เว็บไม่เคยหลับและกินชั่วโมงเกือบทั้งเดือน ชนกับเว็บอีกตัว
+2. ใช้ไฟล์ `.github/workflows/keepalive.yml` แทน: GitHub เรียก `/api/health` สัปดาห์ละ 2 ครั้ง (ฟรี) ตั้ง **Settings → Secrets and variables → Actions → Variables → New repository variable** ชื่อ `APP_URL` ค่า `https://<url ของคุณ>` (ไม่ต้องมี `/` ต่อท้าย) หน้านี้เรียกฐานข้อมูลจริงทุกครั้ง จึงนับเป็นการใช้งาน
+3. ถ้าโปรเจกต์ถูกพักไปแล้ว ให้เข้า Supabase dashboard กด **Restore project**
 
 ### สำรองข้อมูลหลังจบทุกรอบประเมิน
 

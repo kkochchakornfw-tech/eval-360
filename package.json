@@ -9,6 +9,7 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "seed:users": "tsx scripts/seed-users.ts",
+    "export:data": "tsx scripts/export-data.ts",
     "create:admin": "tsx scripts/create-admin.ts"
   },
   "dependencies": {

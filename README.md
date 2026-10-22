@@ -93,6 +93,40 @@ Next.js (App Router) + TypeScript + Tailwind + Supabase. รายละเอ�
 | ล็อกอินแล้วกลับไปหน้า login วนไปมา | Redirect URLs ใน Supabase ไม่มี `/auth/callback` ของเว็บ หรือ Site URL ผิด |
 | `Signups not allowed for this instance` | ยังปิด "Allow new users to sign up" อยู่ ให้เปิด (ส่วน B ข้อ 6) |
 
+## Deploy ขึ้น Render (ฟรี)
+
+ใช้แผนฟรีได้ แต่เว็บจะ "หลับ" เมื่อไม่มีคนเข้า ครั้งแรกที่เปิดอาจช้า 30–60 วินาที (เงื่อนไขของ Render เปลี่ยนได้ เช็กที่หน้าเว็บของเขา)
+
+1. ไป <https://render.com> สมัครด้วยบัญชี GitHub แล้วอนุญาตให้เข้าถึง repo `eval-360`
+2. **New + → Blueprint** → เลือก repo นี้ Render อ่านไฟล์ `render.yaml` ให้เอง
+3. หน้าถัดไปให้กรอกตัวแปร (ค่าเอาจาก `.env.local`):
+   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (ลับมาก ใส่เฉพาะที่นี่ ห้ามแปะที่อื่นหรือส่งต่อ)
+   - `NEXT_PUBLIC_SITE_URL`: ใส่ชั่วคราวเป็น `https://eval-360.onrender.com` แล้วแก้ให้ตรงกับ URL จริงที่ Render ให้หลัง deploy (ถ้าแก้ ต้องกด Manual Deploy อีกรอบ เพราะค่า `NEXT_PUBLIC_*` ถูกฝังตอน build)
+4. กด **Apply** รอ build ประมาณ 3–5 นาที เสร็จแล้วเปิด URL ที่ได้ ควรเห็นหน้า login
+5. ตรวจว่า `https://<url ของคุณ>/api/health` ตอบ `{"ok":true}`
+6. ถ้าไม่ได้ใช้ Google ล็อกอิน ปล่อย `NEXT_PUBLIC_GOOGLE_LOGIN` เป็น `off`
+7. บนมือถือ: เปิด URL ใน Chrome/Safari → เมนูแชร์ → **Add to Home Screen** จะได้ไอคอนเหมือนแอป
+
+ทุกครั้งที่ push โค้ดใหม่ขึ้น GitHub Render จะ deploy ให้เอง
+
+### กันฐานข้อมูล Supabase ฟรีไม่ให้ถูกพัก
+
+โปรเจกต์ Supabase แผนฟรีถูกพักอัตโนมัติถ้าไม่มีการใช้งานราว 1 สัปดาห์ ทางป้องกัน:
+
+1. สมัคร UptimeRobot (ฟรี) <https://uptimerobot.com> → **Add New Monitor** ชนิด HTTP(s)
+   URL: `https://<url ของคุณ>/api/health` ช่วงเวลาเช็ก 5 นาที (ค่าฟรีต่ำสุด) เพื่อให้เว็บไม่หลับด้วย
+   (หน้านี้เรียกฐานข้อมูลจริงทุกครั้ง จึงนับเป็นการใช้งาน)
+2. ถ้าโปรเจกต์ถูกพักไปแล้ว ให้เข้า Supabase dashboard กด **Restore project**
+
+### สำรองข้อมูลหลังจบทุกรอบประเมิน
+
+```bash
+npm run export:data
+```
+
+บันทึกทุกตารางเป็นไฟล์ JSON ที่ `backups/<วันที่>/` (โฟลเดอร์นี้ไม่ขึ้น git เพราะมีชื่อและคะแนน) เก็บไว้ในที่ปลอดภัยของคุณเอง
+
 ## พัฒนา
 
 ```bash

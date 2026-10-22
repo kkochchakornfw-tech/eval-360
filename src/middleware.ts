@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PREFIXES = ["/login", "/auth"];
+const PUBLIC_PREFIXES = ["/login", "/auth", "/api/health"];
 
 const startsWith = (path: string, prefixes: string[]) =>
   prefixes.some((p) => path === p || path.startsWith(`${p}/`));

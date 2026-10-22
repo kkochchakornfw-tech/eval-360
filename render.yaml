@@ -1,0 +1,22 @@
+# Render Blueprint: New + → Blueprint → pick this repo. Secrets are filled in on the Render dashboard.
+services:
+  - type: web
+    name: eval-360
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false
+      - key: NEXT_PUBLIC_GOOGLE_LOGIN
+        value: "off"

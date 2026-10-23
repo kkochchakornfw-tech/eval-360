@@ -12,6 +12,7 @@ import { firstError, loginSchema } from "@/lib/validation";
 import { useToast } from "@/components/Toast";
 import { PasswordInput } from "@/components/PasswordInput";
 import { Spinner } from "@/components/Spinner";
+import { NamePicker } from "./NamePicker";
 
 // Google sign-in stays in the code but is only shown once it is set up (see README)
 const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "on";
@@ -99,25 +100,7 @@ export function LoginForm() {
                 ยังไม่มีบัญชี ติดต่อหัวหน้าเพื่อสร้างบัญชีให้
               </p>
             ) : (
-              <select
-                id="who"
-                className="input"
-                value={picked}
-                onChange={(e) => setPicked(e.target.value)}
-              >
-                <option value="">เลือกชื่อ</option>
-                {groups.map((g) => (
-                  <optgroup key={g} label={g}>
-                    {people
-                      .filter((p) => p.group === g)
-                      .map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                  </optgroup>
-                ))}
-              </select>
+              <NamePicker people={people} groups={groups} value={picked} onChange={setPicked} />
             )}
           </div>
           <div>

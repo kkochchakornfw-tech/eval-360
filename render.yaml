@@ -4,6 +4,8 @@ services:
     name: eval-360
     runtime: node
     plan: free
+    # same region as the Supabase project (ap-southeast-1) keeps database calls fast
+    region: singapore
     buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /api/health

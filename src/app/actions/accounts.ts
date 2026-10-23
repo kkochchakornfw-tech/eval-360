@@ -199,7 +199,7 @@ export interface LoginPerson {
 /** Public: names that can sign in with name + PIN. Contains no email and no secret. */
 export async function listLoginPeopleAction(): Promise<LoginPerson[]> {
   const admin = createAdminClient();
-  const [{ data: people }, { data: groups }] = await Promise.all([
+  const [{ data: people, error: peopleErr }, { data: groups }] = await Promise.all([
     admin
       .from("profiles")
       .select("id,full_name,role,staff_group_id,is_admin")
@@ -209,6 +209,7 @@ export async function listLoginPeopleAction(): Promise<LoginPerson[]> {
       .order("full_name"),
     admin.from("staff_groups").select("id,name"),
   ]);
+  if (peopleErr) console.error("listLoginPeopleAction:", peopleErr.message);
   const names = new Map((groups ?? []).map((g) => [g.id as number, g.name as string]));
   return (people ?? []).map((p) => ({
     id: p.id as string,

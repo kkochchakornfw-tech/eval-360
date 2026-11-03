@@ -7,3 +7,4 @@ next-env.d.ts
 scripts/users.csv
 .next-preview
 backups/
+pin-list*.xlsx

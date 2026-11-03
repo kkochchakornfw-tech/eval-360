@@ -18,6 +18,7 @@ const METRICS = {
     tab: "คะแนนรวม",
     max: 100,
     pick: (p: PersonReport) => p.result.total100Rounded,
+    pickRaw: (p: PersonReport) => p.result.total100,
     partial: (p: PersonReport) => !p.result.isComplete || !p.peersComplete,
   },
   core: {
@@ -25,6 +26,7 @@ const METRICS = {
     tab: "Core",
     max: 5,
     pick: (p: PersonReport) => p.result.core5Rounded,
+    pickRaw: (p: PersonReport) => p.result.core5,
     partial: (p: PersonReport) => p.result.corePartial || !p.peersComplete,
   },
   job: {
@@ -32,6 +34,7 @@ const METRICS = {
     tab: "Job Base",
     max: 5,
     pick: (p: PersonReport) => p.result.job5,
+    pickRaw: (p: PersonReport) => p.result.job5,
     partial: () => false,
   },
   kpi: {
@@ -39,6 +42,7 @@ const METRICS = {
     tab: "KPI",
     max: 5,
     pick: (p: PersonReport) => p.result.kpi5,
+    pickRaw: (p: PersonReport) => p.result.kpi5,
     partial: () => false,
   },
 } as const;
@@ -47,12 +51,15 @@ type MetricKey = keyof typeof METRICS;
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ metric?: string; group?: string }>;
+  searchParams: Promise<{ metric?: string; group?: string; view?: string }>;
 }) {
   await requireHead();
   const sp = await searchParams;
   const metricKey: MetricKey = sp.metric && sp.metric in METRICS ? (sp.metric as MetricKey) : "total";
   const metric = METRICS[metricKey];
+  // chart only: raw (full-precision) scores or Core rounded per question
+  const view: "rounded" | "raw" = sp.view === "raw" ? "raw" : "rounded";
+  const chartPick = view === "raw" ? metric.pickRaw : metric.pick;
 
   const supabase = await createClient();
   const [cycle, staffGroups] = await Promise.all([getCurrentCycle(supabase), getStaffGroups(supabase)]);
@@ -65,7 +72,7 @@ export default async function DashboardPage({
   const everyone = report.people.filter(
     (p) => groupFilter === null || p.profile.staff_group_id === groupFilter,
   );
-  const ranked = sortDescNullsLast(everyone, metric.pick);
+  const ranked = sortDescNullsLast(everyone, chartPick);
   // counted only once every colleague on the roster has evaluated the person
   const complete = everyone.filter((p) => p.peersComplete).length;
   const scored = everyone.filter((p) => p.result.total100 !== null).length;
@@ -129,18 +136,31 @@ export default async function DashboardPage({
             options={Object.entries(METRICS).map(([value, m]) => ({ value, label: m.tab }))}
           />
         </div>
+        <div className="mb-3">
+          <PillFilter
+            param="view"
+            value={view}
+            options={[
+              { value: "rounded", label: "คะแนนที่ปัดแล้ว" },
+              { value: "raw", label: "คะแนนดิบ" },
+            ]}
+          />
+        </div>
         <div className="card p-3 md:p-4">
           <ScoreChart
             rows={ranked.map((p) => ({
               name: p.profile.full_name,
-              value: metric.pick(p),
+              value: chartPick(p),
               partial: metric.partial(p),
             }))}
             max={metric.max}
           />
         </div>
         <p className="mt-2 text-xs text-muted">
-          คะแนน Core ในกราฟปัดเศษรายข้อก่อนรวม (ตั้งแต่ .5 ขึ้นปัดขึ้น) ส่วนตารางด้านล่างแสดงค่าเต็ม · แท่งสีอ่อนและเครื่องหมาย * = คะแนนระหว่างทาง (เพื่อนยังประเมินไม่ครบทุกคน หรือหัวหน้ายังไม่ประเมิน) ตัวเลขอัปเดตเองเมื่อมีคนประเมินเพิ่ม
+          {view === "rounded"
+            ? "คะแนน Core ในกราฟปัดเศษรายข้อก่อนรวม (ตั้งแต่ .5 ขึ้นปัดขึ้น)"
+            : "กราฟนี้แสดงคะแนนดิบ (ไม่ปัดเศษ Core รายข้อ)"}{" "}
+          · ตารางด้านล่างไม่เปลี่ยนตามตัวเลือกนี้ · แท่งสีอ่อนและเครื่องหมาย * = คะแนนระหว่างทาง (เพื่อนยังประเมินไม่ครบทุกคน หรือหัวหน้ายังไม่ประเมิน) ตัวเลขอัปเดตเองเมื่อมีคนประเมินเพิ่ม
         </p>
       </section>
       )}

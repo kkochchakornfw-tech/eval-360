@@ -273,7 +273,10 @@ export function EvalForm(props: Props) {
             {done}/{total} ข้อ
           </p>
           <div className="flex gap-2">
-            <button type="button" className="btn" onClick={() => router.push(props.backHref)}>
+            <button type="button" className="btn" onClick={() => {
+              document.documentElement.setAttribute("data-navigating", "");
+              router.push(props.backHref);
+            }}>
               ยกเลิก
             </button>
             <button

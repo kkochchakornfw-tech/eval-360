@@ -1,6 +1,9 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { Spinner } from "@/components/Spinner";
+import { useUrlNav } from "@/components/useUrlNav";
 import type { FilterOption } from "@/components/FilterBar";
 
 /** Segmented pill buttons that write the chosen value to the URL query string. */
@@ -13,18 +16,20 @@ export function PillFilter({
   value: string;
   options: FilterOption[];
 }) {
-  const router = useRouter();
+  const nav = useUrlNav();
+  const [target, setTarget] = useState<string | null>(null);
   const pathname = usePathname();
   const params = useSearchParams();
 
   function choose(next: string) {
     const q = new URLSearchParams(params.toString());
     q.set(param, next);
-    router.replace(`${pathname}?${q.toString()}`, { scroll: false });
+    setTarget(next);
+    nav.replace(`${pathname}?${q.toString()}`);
   }
 
   return (
-    <div role="tablist" className="card inline-flex max-w-full gap-1 overflow-x-auto p-1.5">
+    <div role="tablist" aria-busy={nav.pending} className="card inline-flex max-w-full gap-1 overflow-x-auto p-1.5">
       {options.map((o) => (
         <button
           key={o.value}
@@ -37,7 +42,10 @@ export function PillFilter({
               : "text-muted hover:bg-white/80 hover:text-ink"
           }`}
         >
-          {o.label}
+          <span className="inline-flex items-center gap-2">
+            {nav.pending && target === o.value && <Spinner size={14} />}
+            {o.label}
+          </span>
         </button>
       ))}
     </div>

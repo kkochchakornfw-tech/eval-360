@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useUrlNav } from "@/components/useUrlNav";
 import { deleteEvaluationAction } from "@/app/actions/evaluation";
 import { useRun } from "@/components/useRun";
 import { EmptyState } from "@/components/EmptyState";
@@ -31,7 +31,7 @@ export function DataTable({
   cycleId: number;
   cycles: { id: number; name: string }[];
 }) {
-  const router = useRouter();
+  const nav = useUrlNav();
   const { run, pending } = useRun();
   const [q, setQ] = useState("");
   const [role, setRole] = useState<"all" | "head" | "staff">("all");
@@ -64,7 +64,7 @@ export function DataTable({
         <select
           className="input"
           value={cycleId}
-          onChange={(e) => router.push(`/data?cycle=${e.target.value}`)}
+          onChange={(e) => nav.push(`/data?cycle=${e.target.value}`)}
         >
           {cycles.map((c) => (
             <option key={c.id} value={c.id}>

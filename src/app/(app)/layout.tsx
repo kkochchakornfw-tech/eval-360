@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { canAdmin } from "@/lib/roles";
 import { requireProfile } from "@/lib/session";
 import { signOutAction } from "@/app/actions/auth";
 import { BottomNav, SidebarNav } from "@/components/AppNav";
+import { NavProgress } from "@/components/NavProgress";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireProfile();
@@ -99,6 +101,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </main>
       </div>
 
+      <Suspense fallback={null}>
+        <NavProgress />
+      </Suspense>
       {isHead && <BottomNav />}
     </div>
   );

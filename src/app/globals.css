@@ -52,7 +52,8 @@ html[data-busy] main {
   pointer-events: none;
 }
 html[data-busy]::before,
-html[data-navigating]::before {
+html[data-navigating]::before,
+html[data-loading]::before {
   content: "";
   position: fixed;
   top: 0;
